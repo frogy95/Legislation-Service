@@ -26,7 +26,7 @@ class IssuesPublichearing(Issues):
         self.description = "보건복지부 입법/행정예고 전자공청회"
         main_content = _link[2].find('a')
         self.item_title = _link[2].text.strip('\r').strip('\n').strip('\t').strip()
-        self.item_link = "https://www.epeople.go.kr/cmmn/idea/redirect.do?ideaRegNo={0}".format(re.search(r"([A-Z0-9]{3}-\d{4}-\d{7})", main_content.get('onclick')))        
+        self.item_link = "https://www.epeople.go.kr/cmmn/idea/redirect.do?ideaRegNo={0}".format(re.search(r"([A-Z0-9]{3}-\d{4}-\d{7})", main_content.get('onclick')).group(1))        
         self.item_description = "기간 {0}".format(_link[3].text)
         self.item_author = _link[3].text.strip('\r').strip('\n').strip('\t').strip()
         self.item_category = ""
