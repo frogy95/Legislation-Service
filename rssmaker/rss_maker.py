@@ -28,7 +28,12 @@ def get_new_articles(db, url, title, parser):
 
 
 def get_new_articles_selenium(db, url, title, parser):
-    driver = webdriver.Chrome()
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    driver = webdriver.Chrome(options=options)
     driver.get(url)
 
     try:
@@ -76,7 +81,7 @@ def publish_rss(db, title, sender):
 
 
 def save_crawling_nhic_library(db):
-    new_articles = get_new_articles(db, 'http://sis.nhis.or.kr/ggoz101_r01.do?BLBD_TYPE=00&amp;reqUrl=ggoz101m01',
+    new_articles = get_new_articles(db, 'https://www.nhis.or.kr/nhis/minwon/wbhace10210m01.do',
                                     'nhic_library',
                                     parser_nhic_library)
 
@@ -105,7 +110,7 @@ def make_rss():
     new_articles = ()
     new_articles += (save_crawling_mohw_law(db), )
     new_articles += (save_crawling_mohw_publichearing(db), )
-    #new_articles += (save_crawling_nhic_library(db),)
+    new_articles += (save_crawling_nhic_library(db),)
 
     for articles in new_articles:
         for article in articles:
@@ -113,7 +118,7 @@ def make_rss():
 
     publish_rss(db, 'law', 'RSS 뉴스피드- 보건복지부 법령/시행령/시행규칙')
     publish_rss(db, 'publichearing', 'RSS 뉴스피드- 보건복지부 전자공청회')
-    #publish_rss(db, 'nhic_library', 'RSS 뉴스피드- 건강보험공단 검진 공지사항')
+    publish_rss(db, 'nhic_library', 'RSS 뉴스피드- 건강보험공단 검진 공지사항')
     db.conn.close()
 
 
