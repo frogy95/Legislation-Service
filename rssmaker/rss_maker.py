@@ -1,5 +1,6 @@
 import PyRSS2Gen
 import datetime
+import sys
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -62,7 +63,7 @@ def publish_rss(db, title, sender):
         if rss.title == "":
             rss.title = sender
             rss.link = row['link']
-            rss.lastBuildDate = datetime.datetime.utcnow()
+            rss.lastBuildDate = datetime.datetime.now(datetime.UTC)
             rss.description = row['description']
 
         item = PyRSS2Gen.RSSItem(
@@ -124,4 +125,4 @@ def make_rss():
 
 if __name__ == "__main__":
     make_rss()
-    quit()
+    sys.exit()

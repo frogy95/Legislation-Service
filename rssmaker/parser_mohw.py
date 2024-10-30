@@ -30,7 +30,7 @@ class IssuesPublichearing(Issues):
         self.item_description = "기간 {0}".format(_link[3].text)
         self.item_author = _link[3].text.strip('\r').strip('\n').strip('\t').strip()
         self.item_category = ""
-        self.item_pubDate = datetime.datetime.now(datetime.timezone.utc)
+        self.item_pubDate = datetime.datetime.now(datetime.UTC)
         self.item_guid = _link[0].text
         return
     
@@ -65,6 +65,6 @@ class IssuesLaw(Issues):
         self.item_description = "공포일:{0}, 시행일:{1}".format(_link[3].text.strip('\r').strip('\n').strip('\t').strip(), _link[4].text.strip('\r').strip('\n').strip('\t').strip())
         self.item_author = "보건복지부"
         self.item_category = ""
-        self.item_pubDate = datetime.datetime.now(datetime.timezone.utc)
+        self.item_pubDate = datetime.datetime.now(datetime.UTC)
         self.item_guid = ''.join(filter(str.isdigit, _link[1].text))
         return
