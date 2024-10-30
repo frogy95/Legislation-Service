@@ -2,6 +2,12 @@ import PyRSS2Gen
 import datetime
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
 from DbHandler import DbHandler
 from parser_mohw import parser_mohw_publichearing
 from parser_mohw import parser_mohw_law
@@ -20,6 +26,25 @@ def get_new_articles(db, url, title, parser):
 
     return filter(lambda x: int(x.item_guid) > max_id, articles)
 
+
+def get_new_articles_selenium(db, url, title, parser):
+    driver = webdriver.Chrome()
+    driver.get(url)
+
+    try:
+        WebDriverWait(driver, 3).until(EC.frame_to_be_available_and_switch_to_it((By.TAG_NAME, "iframe")))
+        WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "tbl.default.brd9")))
+    except TimeoutException:
+        print("TimeoutError")
+        driver.quit()            
+
+    bs_object = BeautifulSoup(driver.page_source, "html.parser")
+
+    articles = parser(bs_object)
+    max_id = db.get_max_id(title)
+
+    return filter(lambda x: int(x.item_guid) > max_id, articles)
+    
 
 def publish_rss(db, title, sender):
     cur = db.conn.cursor()
@@ -59,9 +84,9 @@ def save_crawling_nhic_library(db):
 
 
 def save_crawling_mohw_publichearing(db):
-    new_articles = get_new_articles(db, 'https://www.mohw.go.kr/menu.es?mid=a10409030000',
-                                    'publichearing',
-                                    parser_mohw_publichearing)
+    new_articles = get_new_articles_selenium(db, 'https://www.mohw.go.kr/menu.es?mid=a10409030000',
+                                            'publichearing',
+                                            parser_mohw_publichearing)
 
     return new_articles
 
@@ -79,7 +104,7 @@ def make_rss():
 
     new_articles = ()
     new_articles += (save_crawling_mohw_law(db), )
-    #new_articles += (save_crawling_mohw_publichearing(db), )
+    new_articles += (save_crawling_mohw_publichearing(db), )
     #new_articles += (save_crawling_nhic_library(db),)
 
     for articles in new_articles:
@@ -87,7 +112,7 @@ def make_rss():
             db.insert(article)
 
     publish_rss(db, 'law', 'RSS 뉴스피드- 보건복지부 법령/시행령/시행규칙')
-    #publish_rss(db, 'publichearing', 'RSS 뉴스피드- 보건복지부 전자공청회')
+    publish_rss(db, 'publichearing', 'RSS 뉴스피드- 보건복지부 전자공청회')
     #publish_rss(db, 'nhic_library', 'RSS 뉴스피드- 건강보험공단 검진 공지사항')
     db.conn.close()
 
