@@ -22,7 +22,7 @@ def parser_nhic_library(bs_object):
 class IssuesNhicLibrary(Issues):
     def __init__(self, _link):
         self.title = "nhic_library"
-        self.link = ""
+        self.link = "https://www.nhis.or.kr/nhis/minwon/wbhace10210m01.do"
         self.description = "건강보험공단 검진 공지사항"
         main_content = _link[1].find('a')
         self.item_title = _link[1].text.strip('\r').strip('\n').strip('\t').strip()

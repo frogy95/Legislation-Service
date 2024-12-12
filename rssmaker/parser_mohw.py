@@ -66,5 +66,6 @@ class IssuesLaw(Issues):
         self.item_author = "보건복지부"
         self.item_category = ""
         self.item_pubDate = datetime.datetime.now(datetime.UTC)
-        self.item_guid = ''.join(filter(str.isdigit, _link[1].text))
+        #self.item_guid = ''.join(filter(str.isdigit, _link[1].text))
+        self.item_guid = re.search(r'MST=(\d+)', main_content.get('href')).group(1)
         return
