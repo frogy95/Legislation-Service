@@ -2,6 +2,7 @@ import PyRSS2Gen
 import datetime
 import sys
 import configparser
+import logging
 from urllib.request import urlopen
 from urllib.parse import quote
 from bs4 import BeautifulSoup
@@ -14,18 +15,23 @@ from DbHandler import DbHandler
 from parser_mohw import parser_mohw_publichearing
 from parser_mohw import parser_mohw_law
 from parser_nhic import parser_nhic_library
+import os
 
-#from uploadToGit import github_api_upload
-
-#BASEPATH = 'd:\\service\\legislation-service\\rss\\'
 config = configparser.ConfigParser()
 config.read('config.ini')
 BASEPATH = config['DEFAULT']['BasePath']
 
+# 로그 설정
+logging.basicConfig(filename='rss_maker.log', level=logging.ERROR, format='%(asctime)s %(levelname)s:%(message)s')
+
 def get_html(url):
-    html = urlopen(url)
-    bs_object = BeautifulSoup(html, "html.parser")
-    return bs_object
+    try:
+        html = urlopen(url)
+        bs_object = BeautifulSoup(html, "html.parser")
+        return bs_object
+    except Exception as e:
+        logging.error(f"Error fetching HTML from {url}: {e}")
+        return None
 
 def get_html_iframe(url):
     options = webdriver.ChromeOptions()
@@ -40,10 +46,12 @@ def get_html_iframe(url):
         WebDriverWait(driver, 3).until(EC.frame_to_be_available_and_switch_to_it((By.TAG_NAME, "iframe")))
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "tbl.default.brd9")))
     except TimeoutException:
-        print("TimeoutError")
-        driver.quit()            
+        logging.error(f"TimeoutError fetching iframe from {url}")
+    finally:
+        page_source = driver.page_source
+        driver.quit()
 
-    return BeautifulSoup(driver.page_source, "html.parser")
+    return BeautifulSoup(page_source, "html.parser")
 
 def get_filtered_bymaxid(db, title, articles):
     max_id = db.get_max_id(title)
@@ -85,47 +93,64 @@ def publish_rss(db, title, sender):
 
     # UTF-8 인코딩으로 XML 파일 쓰기
     file_name = 'rss_{0}.xml'.format(title)
-    file_path = BASEPATH + file_name
+    if not os.path.exists(BASEPATH):
+        raise Exception(f"Base path {BASEPATH} does not exist.")
+
+    file_path = os.path.join(BASEPATH, file_name)
     encoding = "utf-8"
-    rss.write_xml(open(file_path, 'w', encoding = encoding), encoding)
-    #github_api_upload(file_path, file_name, encoding)
+    rss.write_xml(open(file_path, 'w', encoding=encoding), encoding)
     return
 
-
 def save_crawling_nhic_library(db):
-    new_articles = get_new_articles(db, get_html('https://www.nhis.or.kr/nhis/minwon/wbhace10210m01.do'),
-                                    'nhic_library',
-                                    get_filtered_bymaxid,   
-                                    parser_nhic_library)
-
-    return new_articles
-
+    try:
+        new_articles = get_new_articles(db, get_html('https://www.nhis.or.kr/nhis/minwon/wbhace10210m01.do'),
+                                        'nhic_library',
+                                        get_filtered_bymaxid,   
+                                        parser_nhic_library)
+        return new_articles
+    except Exception as e:
+        logging.error(f"Error save_crawling_nhic_library : {e}")
+        return None
+    
 
 def save_crawling_mohw_publichearing(db):
-    new_articles = get_new_articles(db, get_html_iframe('https://www.mohw.go.kr/menu.es?mid=a10409030000'),
-                                            'publichearing',
-                                            get_filtered_bymaxid,
-                                            parser_mohw_publichearing)
-
-    return new_articles
-
+    try:
+        new_articles = get_new_articles(db, get_html_iframe('https://www.mohw.go.kr/menu.es?mid=a10409030000'),
+                                                'publichearing',
+                                                get_filtered_bymaxid,
+                                                parser_mohw_publichearing)
+        return new_articles
+    except Exception as e:
+        logging.error(f"Error save_crawling_mohw_publichearing : {e}")
+        return None
 
 def save_crawling_mohw_law(db):
-    new_articles = get_new_articles(db, get_html('https://www.mohw.go.kr/law.es?mid=a10409010000'),
-                                    'law',
-                                    get_filtered_bymaxid,
-                                    parser_mohw_law)
-
-    return new_articles
-
+    try:        
+        new_articles = get_new_articles(db, get_html('https://www.mohw.go.kr/menu.es?mid=a10409010000'),
+                                        'law',
+                                        get_filtered_bymaxid,
+                                        parser_mohw_law)
+        return new_articles
+    except Exception as e:
+        logging.error(f"Error save_crawling_mohw_law : {e}")
+        return None
 
 def make_rss():
     db = DbHandler()
 
-    new_articles = ()    
-    new_articles += (save_crawling_mohw_publichearing(db), )
-    new_articles += (save_crawling_nhic_library(db),)
-    new_articles += (save_crawling_mohw_law(db), )
+    new_articles = ()   
+    
+    result = save_crawling_mohw_publichearing(db)
+    if result:
+        new_articles += (result, )
+    
+    result = save_crawling_nhic_library(db)
+    if result:
+        new_articles += (result, )
+    
+    result = save_crawling_mohw_law(db)
+    if result:
+        new_articles += (result, )
 
     for articles in new_articles:
         for article in articles:
@@ -136,7 +161,10 @@ def make_rss():
     publish_rss(db, 'law', 'RSS 뉴스피드- 보건복지부 법령/시행령/시행규칙')
     db.conn.close()
 
-
 if __name__ == "__main__":
-    make_rss()
-    sys.exit()
+    try:        
+        make_rss()
+    except Exception as e:
+        logging.error(f"Error main : {e}")
+    finally:
+        sys.exit()

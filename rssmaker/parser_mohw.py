@@ -56,8 +56,8 @@ def parser_mohw_law(bs_object):
 class IssuesLaw(Issues):
     def __init__(self, _link):
         self.title = "law"
-        self.link = "https://www.mohw.go.kr/board.es?mid=a10409020000&bid=0026"
-        self.description = "보건복지부 훈령/예규/고시/지침"
+        self.link = "https://www.mohw.go.kr/menu.es?mid=a10409010000"
+        self.description = "보건복지부 법률/시행령/시행규칙"
         main_content = _link[2].find('a')
         self.item_title = _link[2].get_text(strip=True)
         self.item_link = f"https://www.law.go.kr/법령/{self.item_title}"
