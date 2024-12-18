@@ -57,10 +57,6 @@ def get_filtered_bymaxid(db, title, articles):
     max_id = db.get_max_id(title)
     return filter(lambda x: int(x.item_guid) > max_id, articles)
 
-def get_filtered_bypubdate(db, title, articles):
-    max_id = db.get_max_id(title)
-    return filter(lambda x: int(x.item_guid) > max_id, articles)
-
 def get_new_articles(db, html, title, getfilter, parser):    
     articles = parser(html)
     return getfilter(db, title, articles)    
@@ -124,6 +120,7 @@ def save_crawling_mohw_publichearing(db):
         logging.error(f"Error save_crawling_mohw_publichearing : {e}")
         return None
 
+"""
 def save_crawling_mohw_law(db):
     try:        
         new_articles = get_new_articles(db, get_html('https://www.mohw.go.kr/menu.es?mid=a10409010000'),
@@ -134,6 +131,7 @@ def save_crawling_mohw_law(db):
     except Exception as e:
         logging.error(f"Error save_crawling_mohw_law : {e}")
         return None
+"""
 
 def make_rss():
     db = DbHandler()
@@ -147,18 +145,18 @@ def make_rss():
     result = save_crawling_nhic_library(db)
     if result:
         new_articles += (result, )
-    
+    """
     result = save_crawling_mohw_law(db)
     if result:
         new_articles += (result, )
-
+    """
     for articles in new_articles:
         for article in articles:
             db.insert(article)
 
     publish_rss(db, 'publichearing', 'RSS 뉴스피드- 보건복지부 전자공청회')
     publish_rss(db, 'nhic_library', 'RSS 뉴스피드- 건강보험공단 검진 공지사항')
-    publish_rss(db, 'law', 'RSS 뉴스피드- 보건복지부 법령/시행령/시행규칙')
+    ##publish_rss(db, 'law', 'RSS 뉴스피드- 보건복지부 법령/시행령/시행규칙')
     db.conn.close()
 
 if __name__ == "__main__":

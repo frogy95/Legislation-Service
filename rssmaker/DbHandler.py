@@ -47,7 +47,7 @@ class DbHandler:
     def get_max_id(self, title):
         # 주어진 제목(title)에 해당하는 가장 큰 item_guid 값을 가져오는 메서드
         cur = self.conn.cursor()
-        cur.execute("SELECT item_guid FROM rss WHERE title = ? ORDER BY id DESC LIMIT 1;", (title,))
+        cur.execute("SELECT item_guid FROM rss WHERE title = ? ORDER BY item_guid DESC LIMIT 1;", (title,))
         row = cur.fetchone()
         return int(row['item_guid']) if row else 0
 
