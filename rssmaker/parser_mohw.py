@@ -3,6 +3,9 @@ import datetime
 import re
 
 def parser_mohw_publichearing(bs_object):
+    """
+    보건복지부 전자공청회 목록을 파싱해 Articles 튜플로 반환합니다.
+    """
     articles = ()
     table = bs_object.find('table', {'class': 'tbl default brd9'})    
     rows = table.find_all('tr')
@@ -20,6 +23,9 @@ def parser_mohw_publichearing(bs_object):
     return articles
 
 class IssuesPublichearing(Issues):
+    """
+    전자공청회 게시물 구조를 담는 클래스입니다.
+    """
     def __init__(self, _link):
         self.title = "publichearing"
         self.link = "https://www.mohw.go.kr/menu.es?mid=a10409030000"
@@ -36,6 +42,9 @@ class IssuesPublichearing(Issues):
     
 
 def parser_mohw_law(bs_object):
+    """
+    보건복지부 법률/시행령/시행규칙 정보를 파싱해 Articles 튜플로 반환합니다.
+    """
     articles = ()
     table = bs_object.find('table', {'class': 'tstyle_list'})
     rows = table.find_all('tr')
@@ -54,6 +63,9 @@ def parser_mohw_law(bs_object):
 
 
 class IssuesLaw(Issues):
+    """
+    법률/시행령/시행규칙 게시물 구조를 담는 클래스입니다.
+    """
     def __init__(self, _link):
         self.title = "law"
         self.link = "https://www.mohw.go.kr/menu.es?mid=a10409010000"

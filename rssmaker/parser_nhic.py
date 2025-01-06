@@ -3,6 +3,9 @@ import datetime
 import re
 
 def parser_nhic_library(bs_object):
+    """
+    국민건강보험공단 공지사항을 파싱해 Articles 튜플로 반환합니다.
+    """
     articles = ()
     table = bs_object.body.find('table', {'class': 'board-table'})
     rows = table.find_all('tr')
@@ -20,6 +23,9 @@ def parser_nhic_library(bs_object):
     return articles
 
 class IssuesNhicLibrary(Issues):
+    """
+    국민건강보험공단 소식 구조를 담는 클래스입니다.
+    """
     def __init__(self, _link):
         self.title = "nhic_library"
         self.link = "https://www.nhis.or.kr/nhis/minwon/wbhace10210m01.do"

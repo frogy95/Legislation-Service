@@ -11,14 +11,18 @@ def dict_factory(cursor, row):
 class DbHandler:
 
     def __init__(self):
-        # DbHandler 클래스의 생성자
-        # 데이터베이스 연결을 수행하고 테이블을 생성합니다.
+        """
+        DbHandler 클래스의 생성자
+        데이터베이스 연결을 수행하고 테이블을 생성합니다.
+        """
         self.conn = sqlite3.connect("hmcdb.db")
         self.conn.row_factory = dict_factory
         self.create_table()
 
     def insert(self, article):
-        # 데이터베이스에 기사(article)를 삽입하는 메서드
+        """
+        RSS 테이블에 새로운 기사(article)를 삽입합니다.
+        """
         cur = self.conn.cursor()
         existing_article = cur.execute("SELECT * FROM rss WHERE item_guid = ?", (article.item_guid,)).fetchone()
         if not existing_article:
@@ -33,14 +37,18 @@ class DbHandler:
             self.conn.commit()
 
     def get_max_id(self, title):
-        # 주어진 제목(title)에 해당하는 가장 큰 item_guid 값을 가져오는 메서드
+        """
+        주어진 제목(title)에 해당하는 가장 큰 item_guid 값을 가져오는 메서드
+        """
         cur = self.conn.cursor()
         cur.execute("SELECT item_guid FROM rss WHERE title = ? ORDER BY item_guid DESC LIMIT 1;", (title,))
         row = cur.fetchone()
         return int(row['item_guid']) if row else 0
 
     def create_table(self):
-        # 테이블을 생성하는 메서드
+        """
+        RSS 테이블이 존재하지 않을 경우 생성합니다.
+        """
         sql = """CREATE TABLE IF NOT EXISTS rss (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     title TEXT NOT NULL,
