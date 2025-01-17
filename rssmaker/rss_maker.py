@@ -3,6 +3,7 @@ import datetime
 import sys
 import configparser
 import logging
+import ssl
 from urllib.request import urlopen
 from urllib.parse import quote
 from bs4 import BeautifulSoup
@@ -16,6 +17,7 @@ from parser_mohw import parser_mohw_publichearing
 from parser_mohw import parser_mohw_law
 from parser_nhic import parser_nhic_library
 from parser_biz_hira import parser_biz_hira
+from parser_mdfs import parser_mdfs
 from response_hira import urlopen_hira
 import os
 
@@ -40,7 +42,8 @@ def fetch_html(url, use_iframe=False):
     """
     if not use_iframe:
         try:
-            html = urlopen(url)
+            context = ssl._create_unverified_context()
+            html = urlopen(url, context=context)
             return BeautifulSoup(html, "html.parser")
         except Exception as e:
             logging.error(f"Error fetching HTML from {url}: {e}")
@@ -153,10 +156,25 @@ def save_crawling_mohw_law(db):
         logging.error(f"Error save_crawling_mohw_law : {e}")
         return None
 
+def save_crawling_mdfs(db):
+    try:        
+        new_articles = get_new_articles(db, fetch_html('https://www.mfds.go.kr/brd/m_209/list.do'),
+                                        'mdfs',
+                                        get_filtered_bymaxid,
+                                        parser_mdfs)
+        return new_articles
+    except Exception as e:
+        logging.error(f"Error save_crawling_mdfs : {e}")
+        return None
+
 def make_rss():
     db = DbHandler()
 
     new_articles = ()   
+
+    result = save_crawling_mdfs(db)
+    if result:
+        new_articles += (result, )
 
     result = save_crawling_biz_hira(db)
     if result:
@@ -178,6 +196,7 @@ def make_rss():
         for article in articles:
             db.insert(article)
 
+    publish_rss(db, 'mdfs', 'RSS 뉴스피드- 식품의약품안전처 입법/행정예고')
     publish_rss(db, 'biz_hira', 'RSS 뉴스피드- HIRA 요양기관업무포털 공지사항')
     publish_rss(db, 'publichearing', 'RSS 뉴스피드- 보건복지부 전자공청회')
     publish_rss(db, 'nhic_library', 'RSS 뉴스피드- 건강보험공단 검진 공지사항')
