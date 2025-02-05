@@ -1,6 +1,6 @@
-from DbHandler import Issues
 import datetime
 import re
+from .DbHandler import Issues
 
 def parser_nhic_library(bs_object):
     """

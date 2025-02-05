@@ -1,6 +1,6 @@
-from DbHandler import Issues
 import datetime
 import re
+from .DbHandler import Issues
 
 def parser_mohw_publichearing(bs_object):
     """

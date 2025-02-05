@@ -1,6 +1,5 @@
-from DbHandler import Issues
 import datetime
-import re
+from .DbHandler import Issues
 
 def parser_mdfs(bs_object):
     """
@@ -16,8 +15,8 @@ def parser_mdfs(bs_object):
         title = row.find('a', class_ = 'title')
         author = row.find('p', text=lambda x: x and '담당부서' in x)
 
-        if title:
-            issue = IssuesMdfs(title, author, num)
+        if title and num.get_text(strip=True).isdigit():
+            issue = IssuesMdfs(title, author, num.get_text(strip=True))
             if issue.item_guid != "":
                 articles += (issue,)
 
@@ -38,6 +37,6 @@ class IssuesMdfs(Issues):
         self.item_author = _author.get_text(strip=True).replace('담당부서 | ', '')
         self.item_category = ""
         self.item_pubDate = datetime.datetime.now(datetime.UTC)
-        self.item_guid = _num.get_text(strip=True)
+        self.item_guid = _num
         return
     

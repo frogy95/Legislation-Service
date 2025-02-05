@@ -1,9 +1,9 @@
 import PyRSS2Gen
 import datetime
-import sys
-import configparser
-import logging
 import ssl
+import logging
+import configparser
+import os
 from urllib.request import urlopen
 from urllib.parse import quote
 from bs4 import BeautifulSoup
@@ -12,21 +12,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from DbHandler import DbHandler
-from parser_mohw import parser_mohw_publichearing
-from parser_mohw import parser_mohw_law
-from parser_nhic import parser_nhic_library
-from parser_biz_hira import parser_biz_hira
-from parser_mdfs import parser_mdfs
-from response_hira import urlopen_hira
-import os
+from .DbHandler import DbHandler
+from .parser_mohw import parser_mohw_publichearing
+from .parser_mohw import parser_mohw_law
+from .parser_nhic import parser_nhic_library
+from .parser_biz_hira import parser_biz_hira
+from .parser_mdfs import parser_mdfs
+from .response_hira import urlopen_hira
+
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 BASEPATH = config['DEFAULT']['BasePath']
-
-# 로그 설정
-logging.basicConfig(filename='rss_maker.log', level=logging.ERROR, format='%(asctime)s %(levelname)s:%(message)s')
 
 def get_bizhira():
     try:
@@ -192,9 +189,12 @@ def make_rss():
     if result:
         new_articles += (result, )
 
-    for articles in new_articles:
-        for article in articles:
-            db.insert(article)
+    try:
+        for articles in new_articles:
+            for article in articles:
+                db.insert(article)
+    except Exception as e:
+        logging.error(f"Error make_rss, dbInsert : {e}")
 
     publish_rss(db, 'mdfs', 'RSS 뉴스피드- 식품의약품안전처 입법/행정예고')
     publish_rss(db, 'biz_hira', 'RSS 뉴스피드- HIRA 요양기관업무포털 공지사항')
@@ -203,10 +203,3 @@ def make_rss():
     publish_rss(db, 'law', 'RSS 뉴스피드- 보건복지부 법령/시행령/시행규칙')
     db.conn.close()
 
-if __name__ == "__main__":
-    try:        
-        make_rss()
-    except Exception as e:
-        logging.error(f"Error main : {e}")
-    finally:
-        sys.exit()

@@ -1,6 +1,5 @@
-from DbHandler import Issues
 import datetime
-import re
+from .DbHandler import Issues
 
 def parser_biz_hira(data):
     articles = ()
