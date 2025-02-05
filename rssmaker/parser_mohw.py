@@ -1,8 +1,11 @@
-from DbHandler import Issues
 import datetime
 import re
+from .DbHandler import Issues
 
 def parser_mohw_publichearing(bs_object):
+    """
+    보건복지부 전자공청회 목록을 파싱해 Articles 튜플로 반환합니다.
+    """
     articles = ()
     table = bs_object.find('table', {'class': 'tbl default brd9'})    
     rows = table.find_all('tr')
@@ -20,6 +23,9 @@ def parser_mohw_publichearing(bs_object):
     return articles
 
 class IssuesPublichearing(Issues):
+    """
+    전자공청회 게시물 구조를 담는 클래스입니다.
+    """
     def __init__(self, _link):
         self.title = "publichearing"
         self.link = "https://www.mohw.go.kr/menu.es?mid=a10409030000"
@@ -30,12 +36,15 @@ class IssuesPublichearing(Issues):
         self.item_description = f"기간 {_link[3].get_text(strip=True)}"
         self.item_author = _link[3].get_text(strip=True)
         self.item_category = ""
-        self.item_pubDate = datetime.datetime.now(datetime.UTC)
+        self.item_pubDate = datetime.datetime.now(datetime.timezone.utc)
         self.item_guid = _link[0].text
         return
     
 
 def parser_mohw_law(bs_object):
+    """
+    보건복지부 법률/시행령/시행규칙 정보를 파싱해 Articles 튜플로 반환합니다.
+    """
     articles = ()
     table = bs_object.find('table', {'class': 'tstyle_list'})
     rows = table.find_all('tr')
@@ -54,6 +63,9 @@ def parser_mohw_law(bs_object):
 
 
 class IssuesLaw(Issues):
+    """
+    법률/시행령/시행규칙 게시물 구조를 담는 클래스입니다.
+    """
     def __init__(self, _link):
         self.title = "law"
         self.link = "https://www.mohw.go.kr/menu.es?mid=a10409010000"
@@ -64,6 +76,6 @@ class IssuesLaw(Issues):
         self.item_description = f"공포일:{_link[3].get_text(strip=True)}, 시행일:{_link[4].get_text(strip=True)}"
         self.item_author = "보건복지부"
         self.item_category = ""
-        self.item_pubDate = datetime.datetime.now(datetime.UTC)
+        self.item_pubDate = datetime.datetime.now(datetime.timezone.utc)
         self.item_guid = re.search(r'MST=(\d+)', main_content.get('href')).group(1)
         return
