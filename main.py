@@ -1,11 +1,12 @@
 import logging
-import sys
-from rssmaker import make_rss
+from rssmaker.rss_maker import make_rss
 
-if __name__ == "__main__":
-    try:        
+def main():
+    """RSS 생성 실행 함수"""
+    try:
         make_rss()
     except Exception as e:
-        logging.error(f"Error main : {e}")
-    finally:
-        sys.exit()
+        logging.error(f"Error in main: {e}", exc_info=True)
+
+if __name__ == "__main__":
+    main()
