@@ -52,9 +52,8 @@ def fetch_html(url, use_iframe=False):
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         driver = webdriver.Chrome(options=options)
-        driver.get(url)
-
         try:
+            driver.get(url)
             WebDriverWait(driver, 3).until(EC.frame_to_be_available_and_switch_to_it((By.TAG_NAME, "iframe")))
             WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, "tbl.default.brd9")))
         except TimeoutException:
@@ -85,7 +84,7 @@ def publish_rss(db, title, sender):
         if rss.title == "":
             rss.title = sender
             rss.link = row['link']
-            rss.lastBuildDate = datetime.datetime.now(datetime.UTC)
+            rss.lastBuildDate = datetime.datetime.now(datetime.timezone.utc)
             rss.description = row['description']
 
         item = PyRSS2Gen.RSSItem(
@@ -99,14 +98,20 @@ def publish_rss(db, title, sender):
         )
         rss.items.append(item)
 
-    # UTF-8 인코딩으로 XML 파일 쓰기
     file_name = 'rss_{0}.xml'.format(title)
+    # BASEPATH 존재 여부 체크 및 fallback 디렉토리 처리
     if not os.path.exists(BASEPATH):
-        raise Exception(f"Base path {BASEPATH} does not exist.")
+        logging.error(f"Base path {BASEPATH} does not exist. Using './rss' directory instead.")
+        fallback_dir = os.path.join(os.getcwd(), "rss")
+        if not os.path.exists(fallback_dir):
+            os.makedirs(fallback_dir)
+        file_path = os.path.join(fallback_dir, file_name)
+    else:
+        file_path = os.path.join(BASEPATH, file_name)
 
-    file_path = os.path.join(BASEPATH, file_name)
-    encoding = "utf-8"
-    rss.write_xml(open(file_path, 'w', encoding=encoding), encoding)
+    # UTF-8 인코딩으로 XML 파일 쓰기
+    with open(file_path, 'w', encoding="utf-8") as f:
+        rss.write_xml(f, "utf-8")
     return
 
 def save_crawling_biz_hira(db):
@@ -167,32 +172,31 @@ def save_crawling_mdfs(db):
 def make_rss():
     db = DbHandler()
 
-    new_articles = ()   
+    new_articles = []   # 리스트로 초기화
 
     result = save_crawling_mdfs(db)
     if result:
-        new_articles += (result, )
+        new_articles.extend(result)
 
     result = save_crawling_biz_hira(db)
     if result:
-        new_articles += (result, )
+        new_articles.extend(result)
     
     result = save_crawling_mohw_publichearing(db)
     if result:
-        new_articles += (result, )
+        new_articles.extend(result)
     
     result = save_crawling_nhic_library(db)
     if result:
-        new_articles += (result, )
+        new_articles.extend(result)
 
     result = save_crawling_mohw_law(db)
     if result:
-        new_articles += (result, )
+        new_articles.extend(result)
 
     try:
-        for articles in new_articles:
-            for article in articles:
-                db.insert(article)
+        for article in new_articles:
+            db.insert(article)
     except Exception as e:
         logging.error(f"Error make_rss, dbInsert : {e}")
 

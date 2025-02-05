@@ -36,6 +36,6 @@ class IssuesNhicLibrary(Issues):
         self.item_description = f"공지일자: {_link[3].get_text(strip=True)}"
         self.item_author = _link[2].get_text(strip=True)
         self.item_category = ""
-        self.item_pubDate = datetime.datetime.now(datetime.UTC)
+        self.item_pubDate = datetime.datetime.now(datetime.timezone.utc)
         self.item_guid = re.search(r"articleNo=(\d+)", main_content.get('href')).group(1)
         return

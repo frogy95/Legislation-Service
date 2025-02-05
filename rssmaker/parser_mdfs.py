@@ -36,7 +36,6 @@ class IssuesMdfs(Issues):
         self.item_description = ""
         self.item_author = _author.get_text(strip=True).replace('담당부서 | ', '')
         self.item_category = ""
-        self.item_pubDate = datetime.datetime.now(datetime.UTC)
+        self.item_pubDate = datetime.datetime.now(datetime.timezone.utc)
         self.item_guid = _num
         return
-    

@@ -23,19 +23,18 @@ class DbHandler:
         """
         RSS 테이블에 새로운 기사(article)를 삽입합니다.
         """
-        cur = self.conn.cursor()
-        existing_article = cur.execute("SELECT * FROM rss WHERE item_guid = ?", (article.item_guid,)).fetchone()
-        if not existing_article:
-            sql = """INSERT INTO rss(title, link, description, 
-            item_title, item_link, item_description, item_author, item_category, item_pubDate, item_guid)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+        with self.conn:
+            cur = self.conn.cursor()
+            existing_article = cur.execute("SELECT * FROM rss WHERE item_guid = ?", (article.item_guid,)).fetchone()
+            if not existing_article:
+                sql = """INSERT INTO rss(title, link, description, 
+                item_title, item_link, item_description, item_author, item_category, item_pubDate, item_guid)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
-            cur.execute(sql, (article.title, article.link, article.description,
-                            article.item_title, article.item_link, article.item_description,
-                            article.item_author, article.item_category, article.item_pubDate, article.item_guid))
+                cur.execute(sql, (article.title, article.link, article.description,
+                                article.item_title, article.item_link, article.item_description,
+                                article.item_author, article.item_category, article.item_pubDate, article.item_guid))
             
-            self.conn.commit()
-
     def get_max_id(self, title):
         """
         주어진 제목(title)에 해당하는 가장 큰 item_guid 값을 가져오는 메서드

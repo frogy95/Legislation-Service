@@ -26,6 +26,6 @@ class IssuesBizHira(Issues):
         self.item_description = ""
         self.item_author = _link[6] if len(_link) == 10 else _link[15]
         self.item_category = ""
-        self.item_pubDate = datetime.datetime.now(datetime.UTC)
+        self.item_pubDate = datetime.datetime.now(datetime.timezone.utc)
         self.item_guid = _link[2] if len(_link) == 10 else _link[11]
         return

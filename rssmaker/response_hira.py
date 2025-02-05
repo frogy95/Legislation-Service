@@ -1,4 +1,5 @@
 import requests
+import logging
 
 def urlopen_hira():
     url = "https://biz.hira.or.kr/qya/bbs/selectComBbsList.ndo"
@@ -33,6 +34,11 @@ def urlopen_hira():
     # 여기서는 네트워크 탭에서 확인한 'SSV:utf-8' 이후 내용을 그대로 복붙하는 게 중요.
     payload = """SSV:utf-8JSESSIONID=nullBIZINTERSESSION=WT_FPC=id=2c74c0528e558c279011725513957868:lv=1735628207366:ss=1735628207366WMONID=QFHiofJgkm0browserType=ChromeosVersion=Windows 10navigatorName=ChromenavigatorVersion=131Dataset:dsParam_RowType_brdTyBltNo:STRING(256)bltNo:STRING(256)totCnt:STRING(256)currentPage:STRING(256)recordCountPerPage:STRING(256)firstIndex:STRING(256)lastIndex:STRING(256)bbsId:STRING(256)cbSearchCnd:STRING(256)edSearchWrd:STRING(256)nttId:STRING(256)atchFileId:STRING(256)codeId:STRING(256)catType01Val:STRING(256)catType02Val:STRING(256)catType03Val:STRING(256)N120020BBSMSTR_000000000675allDataset:gdsCurrentMenu_RowType_menuId:STRING(256)menuNm:STRING(256)urlDtlAddr:STRING(256)sysCd:STRING(256)scnId:STRING(256)locToDown:STRING(256)hiSysCd:STRING(256)bPopupYn:STRING(256)seAdtYn:STRING(256)formId:STRING(256)winId:STRING(256)params:STRING(256)"""
 
-    response = requests.post(url, headers=headers, data=payload.encode("utf-8"), verify=False)
-
+    try:
+        response = requests.post(url, headers=headers, data=payload.encode("utf-8"), verify=False)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        logging.error(f"Error in urlopen_hira: {e}")
+        return ""
+        
     return response.text

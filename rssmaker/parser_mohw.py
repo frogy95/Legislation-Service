@@ -36,7 +36,7 @@ class IssuesPublichearing(Issues):
         self.item_description = f"기간 {_link[3].get_text(strip=True)}"
         self.item_author = _link[3].get_text(strip=True)
         self.item_category = ""
-        self.item_pubDate = datetime.datetime.now(datetime.UTC)
+        self.item_pubDate = datetime.datetime.now(datetime.timezone.utc)
         self.item_guid = _link[0].text
         return
     
@@ -76,6 +76,6 @@ class IssuesLaw(Issues):
         self.item_description = f"공포일:{_link[3].get_text(strip=True)}, 시행일:{_link[4].get_text(strip=True)}"
         self.item_author = "보건복지부"
         self.item_category = ""
-        self.item_pubDate = datetime.datetime.now(datetime.UTC)
+        self.item_pubDate = datetime.datetime.now(datetime.timezone.utc)
         self.item_guid = re.search(r'MST=(\d+)', main_content.get('href')).group(1)
         return
