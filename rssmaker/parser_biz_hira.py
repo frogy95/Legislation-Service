@@ -1,20 +1,22 @@
 import datetime
 from .DbHandler import Issues
+from .abstract_parser import parse_items
+
+def process_line(line):
+    if 'N\x1f\x03\x1f' in line:
+        header_line = line.split('N\x1f\x03\x1f', 1)[1].strip()
+        headers = header_line.split('\x1f')
+        if len(headers) in [10, 19]:
+            return IssuesBizHira(headers)
+    return None
 
 def parser_biz_hira(data):
-    articles = ()
     data_lines = data.split('\n')
-    for line in data_lines:
-        if 'N\x1f\x03\x1f' in line:
-            header_line = line.split('N\x1f\x03\x1f', 1)[1].strip()
-            headers = header_line.split('\x1f')
-
-            if len(headers) in [10, 19]:
-                issue = IssuesBizHira(headers)
-                if issue.item_guid != "":
-                    articles += (issue,)
-
-    return articles
+    return parse_items(
+        data_lines,
+        lambda lines: lines,  # 데이터 라인 그대로 사용
+        lambda line: process_line(line)
+    )
 
 class IssuesBizHira(Issues):
     def __init__(self, _link):

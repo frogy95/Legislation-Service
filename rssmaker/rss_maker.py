@@ -171,29 +171,22 @@ def save_crawling_mdfs(db):
 
 def make_rss():
     db = DbHandler()
-
     new_articles = []   # 리스트로 초기화
-
-    result = save_crawling_mdfs(db)
-    if result:
-        new_articles.extend(result)
-
-    result = save_crawling_biz_hira(db)
-    if result:
-        new_articles.extend(result)
     
-    result = save_crawling_mohw_publichearing(db)
-    if result:
-        new_articles.extend(result)
+    # 기존 save_crawling_* 호출들을 lambda 함수 호출 방식으로 변경함.
+    sources = [
+        lambda: save_crawling_mdfs(db),
+        lambda: save_crawling_biz_hira(db),
+        lambda: save_crawling_mohw_publichearing(db),
+        lambda: save_crawling_nhic_library(db),
+        lambda: save_crawling_mohw_law(db)
+    ]
+    for get_articles in sources:
+        result = get_articles()
+        if result:
+            new_articles.extend(result)
     
-    result = save_crawling_nhic_library(db)
-    if result:
-        new_articles.extend(result)
-
-    result = save_crawling_mohw_law(db)
-    if result:
-        new_articles.extend(result)
-
+    # ...existing code...
     try:
         for article in new_articles:
             db.insert(article)

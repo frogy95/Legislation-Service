@@ -1,26 +1,18 @@
 import datetime
 import re
 from .DbHandler import Issues
+from .abstract_parser import parse_items
 
 def parser_mohw_publichearing(bs_object):
     """
-    보건복지부 전자공청회 목록을 파싱해 Articles 튜플로 반환합니다.
+    전자공청회 목록 파서 (추상 로직 적용)
     """
-    articles = ()
-    table = bs_object.find('table', {'class': 'tbl default brd9'})    
-    rows = table.find_all('tr')
-
-    for row in reversed(rows):
-        cols = row.find_all('td')
-        if len(cols) == 0:
-            continue
-
-        issue = IssuesPublichearing(cols)
-
-        if issue.item_guid != "":
-            articles += (issue,)
-
-    return articles
+    table = bs_object.find('table', {'class': 'tbl default brd9'})
+    return parse_items(
+        table,
+        lambda tbl: tbl.find_all('tr'),
+        lambda row: IssuesPublichearing(row.find_all('td')) if row.find_all('td') else None
+    )
 
 class IssuesPublichearing(Issues):
     """
@@ -45,24 +37,14 @@ class IssuesPublichearing(Issues):
 
 def parser_mohw_law(bs_object):
     """
-    보건복지부 법률/시행령/시행규칙 정보를 파싱해 Articles 튜플로 반환합니다.
+    법령/시행령/시행규칙 파서 (추상 로직 적용)
     """
-    articles = ()
     table = bs_object.find('table', {'class': 'tstyle_list'})
-    rows = table.find_all('tr')
-
-    for row in reversed(rows):
-        cols = row.find_all('td')
-        if len(cols) == 0:
-            continue
-
-        issue = IssuesLaw(cols)
-
-        if issue.item_guid != "":
-            articles += (issue,)
-
-    return articles
-
+    return parse_items(
+        table,
+        lambda tbl: tbl.find_all('tr'),
+        lambda row: IssuesLaw(row.find_all('td')) if row.find_all('td') else None
+    )
 
 class IssuesLaw(Issues):
     """

@@ -1,26 +1,18 @@
 import datetime
 import re
 from .DbHandler import Issues
+from .abstract_parser import parse_items
 
 def parser_nhic_library(bs_object):
     """
-    국민건강보험공단 공지사항을 파싱해 Articles 튜플로 반환합니다.
+    국민건강보험공단 공지사항 파서 (추상 로직 적용)
     """
-    articles = ()
     table = bs_object.body.find('table', {'class': 'board-table'})
-    rows = table.find_all('tr')
-
-    for row in reversed(rows):
-        cols = row.find_all('td')
-        if len(cols) == 0:
-            continue
-
-        issue = IssuesNhicLibrary(cols)
-
-        if issue.item_guid != "":
-            articles += (issue,)
-
-    return articles
+    return parse_items(
+        table,
+        lambda tbl: tbl.find_all('tr'),
+        lambda row: IssuesNhicLibrary(row.find_all('td')) if row.find_all('td') else None
+    )
 
 class IssuesNhicLibrary(Issues):
     """

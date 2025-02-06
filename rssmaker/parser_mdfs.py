@@ -1,26 +1,24 @@
 import datetime
 from .DbHandler import Issues
+from .abstract_parser import parse_items
 
 def parser_mdfs(bs_object):
     """
-    식품의약품안전처 입법/행정예고를 파싱해 Articles 튜플로 반환합니다.
+    식품의약품안전처 입법/행정예고 파서 (추상 로직 적용)
     """
-    articles = ()
-    table = bs_object.find('div', {'class': 'bbs_list01'})    
-    rows = table.find_all('li')
-
-    for row in reversed(rows):
-
-        num = row.find('div', class_='num')
-        title = row.find('a', class_ = 'title')
-        author = row.find('p', text=lambda x: x and '담당부서' in x)
-
-        if title and num.get_text(strip=True).isdigit():
-            issue = IssuesMdfs(title, author, num.get_text(strip=True))
-            if issue.item_guid != "":
-                articles += (issue,)
-
-    return articles
+    container = bs_object.find('div', {'class': 'bbs_list01'})
+    return parse_items(
+        container,
+        lambda cont: cont.find_all('li'),
+        lambda row: (
+            IssuesMdfs(
+                row.find('a', class_='title'),
+                row.find('p', text=lambda x: x and '담당부서' in x),
+                row.find('div', class_='num').get_text(strip=True)
+            ) if (row.find('a', class_='title') and row.find('div', class_='num') and row.find('div', class_='num').get_text(strip=True).isdigit())
+            else None
+        )
+    )
 
 class IssuesMdfs(Issues):
     """
